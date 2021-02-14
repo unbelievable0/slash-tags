@@ -1,0 +1,8 @@
+name = "slash-tags"
+type = "webpack"
+account_id = ""
+workers_dev = true
+route = ""
+zone_id = ""
+kv_namespaces = [{ binding = "GUILD_TAGS", id = "", preview_id = "" }]
+vars= { APPLICATION_ID = "" }

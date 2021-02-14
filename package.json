@@ -1,0 +1,17 @@
+{
+  "name": "slash-tags",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "publish": "wrangler publish"
+  },
+  "author": "unb <unbelievable.tbh@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^2.1.0"
+  },
+  "dependencies": {
+    "tweetnacl": "^1.0.3"
+  }
+}
