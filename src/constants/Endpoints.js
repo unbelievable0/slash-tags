@@ -4,7 +4,7 @@ const API_VERSION = 8;
 
 const avatarURL = (userID, hash) => {
   const format = hash.startsWith('a_') ? 'gif' : 'png';
-  return `${CDN_URL}/avatars${userID}/${hash}.${format}`;
+  return `${CDN_URL}/avatars/${userID}/${hash}.${format}`;
 };
 
 const defaultAvatarURL = (discriminator) => {
