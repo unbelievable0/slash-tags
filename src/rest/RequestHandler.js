@@ -14,7 +14,7 @@ class RequestHandler {
   constructor(options = {}) {
     const baseURL = options.apiURL || API_URL;
     const version = options.apiVersion || API_VERSION;
-    this.baseURL = `${baseURL}/${version}`;
+    this.baseURL = `${baseURL}/v${version}`;
   }
 
   /**
