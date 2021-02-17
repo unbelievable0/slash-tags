@@ -32,3 +32,8 @@ module.exports.InteractionResponse = require('../structures/InteractionResponse'
  * @type {InteractionEmbedResponse}
  */
 module.exports.InteractionEmbedResponse = require('../structures/InteractionEmbedResponse');
+
+/**
+ * @type {UserError}
+ */
+module.exports.UserError = require('./UserError');

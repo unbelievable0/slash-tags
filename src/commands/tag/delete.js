@@ -43,7 +43,6 @@ class Command extends BaseCommand {
       .commands(commandID)
       .delete();
 
-
     await GUILD_TAGS.delete(key);
     return true;
   }

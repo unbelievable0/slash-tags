@@ -31,15 +31,25 @@ class Command extends BaseCommand {
   }
 
   async _run(context) {
+    const { args: [name] } = context;
     await this.createCommand(context);
-    return {
-      data: {
-        content: 'Tag created successfully!',
-      },
-    };
+    return new Command.InteractionEmbedResponse()
+      .setDescription(`Command \`/${name}\` added.`);
   }
 
   async createCommand({ guildID, args: [name, description, content] }) {
+    if (name.length > 32) {
+      throw new Command.UserError('Name cannot be greater than 32 characters.');
+    }
+
+    if (description.length > 100) {
+      throw new Command.UserError('Description cannot be greater than 100 characters.');
+    }
+
+    if (content.length > 1024) {
+      throw new Command.UserError('Content cannot be greater than 1024 characters.');
+    }
+
     const command = await this.api.applications(APPLICATION_ID).guilds(guildID).commands()
       .post({ name, description });
 

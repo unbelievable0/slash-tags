@@ -59,12 +59,20 @@ class Dispatcher {
    * @returns {InteractionResponse}
    */
   handleError(error) {
-    console.error(error.stack);
-    return new InteractionResponse()
-      .channelMessage()
-      .setContent('An unexpected error occurred executing this command.')
-      .setEmoji('xmark')
-      .setEphemeral();
+    if (error.name === 'UserError') {
+      return new InteractionResponse()
+        .channelMessage()
+        .setContent(error.message)
+        .setEmoji('xmark')
+        .setEphemeral();
+    } else {
+      console.error(error.stack);
+      return new InteractionResponse()
+        .channelMessage()
+        .setContent('An unexpected error occurred executing this command.')
+        .setEmoji('xmark')
+        .setEphemeral();
+    }
   }
 }
 

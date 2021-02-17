@@ -52,7 +52,7 @@ class RequestHandler {
     if (res.headers.get('content-type').includes('application/json')) {
       return res.json();
     }
-    return res.buffer();
+    return null;
   }
 
 }
