@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "wrangler dev",
-    "publish": "wrangler publish"
+    "dev": "wrangler dev --env development",
+    "publish": "wrangler publish --env production"
   },
   "author": "unb <unbelievable.tbh@gmail.com>",
   "license": "MIT",
