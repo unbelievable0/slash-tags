@@ -1,11 +1,23 @@
 class Command {
   constructor(api, options = {}) {
     this._api = api;
-    Object.keys(options).forEach(key => this[key] = options[key]);
+    this.name = options.name;
+    this.type = options.type;
+    this.description = options.description;
+    this.options = options.options;
   }
 
   get api() {
     return this._api;
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      type: this.type,
+      description: this.description,
+      options: this.options,
+    };
   }
 }
 

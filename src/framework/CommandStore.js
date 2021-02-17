@@ -37,7 +37,7 @@ class CommandStore extends Map {
     const result = [];
     for (let key of [...this.keys()]) {
       const route = key.split('/');
-      const command = this.get(key);
+      const command = this.get(key).toJSON();
 
       if (route.length === 1) {
         result.push(command);
