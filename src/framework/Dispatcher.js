@@ -1,13 +1,10 @@
 const { InteractionType, InteractionResponseType } = require('../constants/Types');
 const { Interaction, ApplicationCommand, InteractionResponse, InteractionEmbedResponse } = require('../structures');
-const RequestHandler = require('../rest/RequestHandler');
-const CommandStore = require('./CommandStore');
 
 class Dispatcher {
 
-  constructor() {
-    this.rest = new RequestHandler();
-    this.commandStore = new CommandStore(this);
+  constructor(client) {
+    this.client = client;
   }
 
   async onInteractionReceived(data) {
@@ -36,7 +33,7 @@ class Dispatcher {
     };
 
     //  Check for a global command
-    const command = this.commandStore.get(applicationCommand.commandName);
+    const command = this.client.commandStore.get(applicationCommand.commandName);
     if (command) {
       return (await command.run(context))
         || new InteractionEmbedResponse()

@@ -1,14 +1,14 @@
 const GlobalCommands = require('../constants/GlobalCommands');
 
 class CommandStore extends Map {
-  constructor(dispatcher) {
+  constructor(client) {
     super();
-    this.dispatcher = dispatcher;
+    this.client = client;
     this.registerGlobalCommands(GlobalCommands);
   }
 
   get api() {
-    return this.dispatcher.rest.api;
+    return this.client.rest.api;
   }
 
   registerGlobalCommands(commands, route) {
@@ -29,7 +29,7 @@ class CommandStore extends Map {
   registerGlobalCommand(route) {
     const Command = require(`../commands/${route}`);
     route = route.replace(/\/index$/, '');
-    this.set(route, new Command(this.api));
+    this.set(route, new Command(this.client));
   }
 
   commandList() {

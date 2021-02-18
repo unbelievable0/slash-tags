@@ -5,7 +5,7 @@ const DiscordAPIError = require('./DiscordAPIError');
 const routeBuilder = require('./routeBuilder');
 
 class RequestHandler {
-
+  
   /**
    * @param {object} [options]
    * @param {string} [options.apiURL]

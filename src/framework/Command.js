@@ -1,6 +1,6 @@
 class Command {
-  constructor(api, options = {}) {
-    this._api = api;
+  constructor(client, options = {}) {
+    this.client = client;
     this.name = options.name;
     this.type = options.type;
     this.description = options.description;
@@ -8,7 +8,7 @@ class Command {
   }
 
   get api() {
-    return this._api;
+    return this.client.api;
   }
 
   toJSON() {

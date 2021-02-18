@@ -1,4 +1,4 @@
-const Dispatcher = require('../framework/Dispatcher');
+const Client = require('../framework/Client');
 const authorizeRequest = require('./authorizeRequest');
 
 const Method = method => req => req.method.toLowerCase() === method.toLowerCase();
@@ -15,7 +15,7 @@ const Path = regExp => req => {
 class APIRouter {
   constructor() {
     this.routes = [];
-    this.dispatcher = new Dispatcher();
+    this.client = new Client();
     this.registerRoutes();
   }
 
@@ -28,12 +28,12 @@ class APIRouter {
         return res.status(401).json({ error: 'Unauthorized' });
       }
 
-      return res.json(await this.dispatcher.onInteractionReceived(req.data));
+      return res.json(await this.client.dispatcher.onInteractionReceived(req.data));
     });
 
     this.get('/update-commands', async (req, res) => {
       //  TODO: Add some sort of auth
-      const result = await this.dispatcher.commandStore.updateGlobalCommandList();
+      const result = await this.client.commandStore.updateGlobalCommandList();
       return res.json(result);
     });
   }
