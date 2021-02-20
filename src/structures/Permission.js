@@ -2,7 +2,7 @@ const PermissionFlags = require('../constants/Permissions');
 
 class Permission {
   constructor(bits) {
-    this.bits = bits;
+    this.bits = BigInt(bits);
   }
 
   resolve(permission) {
