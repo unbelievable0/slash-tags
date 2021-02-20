@@ -31,4 +31,5 @@ module.exports = {
   manageRoles:             BigInt(1) << BigInt(28),
   manageWebhooks:          BigInt(1) << BigInt(29),
   manageEmojis:            BigInt(1) << BigInt(30),
+  useSlashCommands:        BigInt(1) << BigInt(31),
 };
