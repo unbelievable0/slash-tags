@@ -33,6 +33,7 @@ class InteractionResponse {
    */
   setEphemeral() {
     this.flags = this.flags | MessageFlags.Ephemeral;
+    this.channelMessage();
     return this;
   }
 
