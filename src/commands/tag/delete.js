@@ -19,7 +19,7 @@ class Command extends BaseCommand {
     });
   }
 
-  async _run(context) {
+  async run(context) {
     if (await this.deleteCommand(context)) {
       return Command.InteractionEmbedResponse()
         .setDescription('Tag deleted successfully!')

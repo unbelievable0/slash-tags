@@ -31,11 +31,12 @@ class Command extends BaseCommand {
     });
   }
 
-  async _run(context) {
+  async run(context) {
     const { args: [name] } = context;
     await this.createCommand(context);
     return new Command.InteractionEmbedResponse()
-      .setDescription(`Command \`/${name}\` added.`);
+      .setDescription(`Command \`/${name}\` added.`)
+      .setColor('green');
   }
 
   async createCommand({ guildID, args: [name, description, content] }) {
