@@ -5,6 +5,7 @@ class Command {
     this.type = options.type;
     this.description = options.description;
     this.options = options.options;
+    this.permissions = options.permissions || [];
   }
 
   get api() {

@@ -1,5 +1,6 @@
 const { InteractionType, InteractionResponseType } = require('../constants/Types');
 const { Interaction, ApplicationCommand, InteractionResponse, InteractionEmbedResponse } = require('../structures');
+const { PermissionFlags } = require('../constants/Permissions');
 
 class Dispatcher {
 
@@ -35,6 +36,18 @@ class Dispatcher {
     //  Check for a global command
     const command = this.client.commandStore.get(applicationCommand.commandName);
     if (command) {
+
+      //  Basic permission check
+      const missingPermissions = context.member.permissions.missing(command.permissions);
+      if (missingPermissions.length) {
+        const permissionString = missingPermissions.map(p => PermissionFlags[p]).join(', ');
+        return new InteractionResponse()
+          .setContent(`You do not have permission to use this command.\nMissing: \`${permissionString}\``)
+          .setEmoji('xmark')
+          .setEphemeral();
+      }
+
+      //  Run the command
       return (await command.run(context))
         || new InteractionEmbedResponse()
           .setDescription('Missing response')
