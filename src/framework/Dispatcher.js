@@ -1,6 +1,7 @@
 const { InteractionType, InteractionResponseType } = require('../constants/Types');
 const { Interaction, ApplicationCommand, InteractionResponse, InteractionEmbedResponse } = require('../structures');
 const { PermissionFlags } = require('../constants/Permissions');
+const { Parser } = require('../modules');
 
 class Dispatcher {
 
@@ -55,11 +56,9 @@ class Dispatcher {
     }
 
     //  Check for a custom tag
-    const customCommand = await GUILD_TAGS.get(`${interaction.guildID}:${applicationCommand.id}`);
-    if (customCommand) {
-      return new InteractionEmbedResponse()
-        .setDescription(customCommand)
-        .setColor('blue');
+    const tag = await GUILD_TAGS.get(`${interaction.guildID}:${applicationCommand.id}`);
+    if (tag) {
+      return new InteractionResponse(new Parser(context, tag).result());
     }
   }
 

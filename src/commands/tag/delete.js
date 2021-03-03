@@ -20,40 +20,22 @@ class Command extends BaseCommand {
   }
 
   async run(context) {
-    if (await this.deleteCommand(context)) {
-      return Command.InteractionEmbedResponse()
-        .setDescription('Tag deleted successfully!')
-        .setEmoji('check')
-        .setColor('green');
-    } else {
-      return Command.InteractionEmbedResponse()
-        .setDescription('Unknown tag.')
-        .setEmoji('xmark')
-        .setColor('red');
-    }
+    await this.deleteCommand(context);
+    return Command.InteractionEmbedResponse()
+      .setDescription('Tag deleted successfully!')
+      .setEmoji('check')
+      .setColor('green');
   }
 
   async deleteCommand({ guildID, args: [name] }) {
-    const key = await this.findCommandKey(guildID, name);
-    if (!key) return;
+    const key = await this.client.modules.tagManagement.getTagKeyFromName(guildID, name);
+    if (!key) {
+      throw new Command.UserError('Unknown tag.');
+    }
 
     const commandID = key.split(':')[1];
-    await this.api
-      .applications(APPLICATION_ID)
-      .guilds(guildID)
-      .commands(commandID)
-      .delete();
-
-    await GUILD_TAGS.delete(key);
-    return true;
-  }
-
-  async findCommandKey(guildID, name) {
-    const { keys } = await GUILD_TAGS.list({ prefix: `${guildID}:` });
-    const key = keys.find(key => key.metadata.name === name);
-    if (key) {
-      return key.name;
-    }
+    await this.client.modules.tagManagement.deleteGuildCommand(guildID, commandID);
+    await this.client.modules.tagManagement.deleteTagKV(key);
   }
 }
 

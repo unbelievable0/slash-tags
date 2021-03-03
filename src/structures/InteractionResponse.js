@@ -2,10 +2,16 @@ const { InteractionResponseType, MessageFlags } = require('../constants/Types');
 const { resolveEmoji } = require('../constants/Emojis');
 
 class InteractionResponse {
-  constructor() {
-    this.type = InteractionResponseType.ChannelMessageWithSource;
-    this.flags = 0;
-    this.content = null;
+  constructor(data = {}) {
+    this.type = data.type || InteractionResponseType.ChannelMessageWithSource;
+    this.flags = data.flags || 0;
+    this.content = data.content || null;
+
+    if (data.embed) {
+      this.embeds = [data.embed];
+    } else if (data.embeds) {
+      this.embeds = data.embeds;
+    }
   }
 
   /**
@@ -51,10 +57,13 @@ class InteractionResponse {
   toJSON() {
     const result = {
       type: this.type,
-      data: {},
+      data: { allowed_mentions: { parse: [] } },
     };
+
     if (this.flags) result.data.flags = this.flags;
     if (this.content) result.data.content = this.content;
+    if (this.embeds) result.data.embeds = this.embeds;
+
     return result;
   }
 }

@@ -5,7 +5,7 @@ class Command extends BaseCommand {
   constructor(...args) {
     super(...args, {
       name: 'create',
-      description: 'Create or edit an existing tag',
+      description: 'Create a new tag',
       type: ApplicationCommandOptionType.SubCommand,
       permissions: ['manageGuild'],
       options: [
@@ -32,30 +32,27 @@ class Command extends BaseCommand {
   }
 
   async run(context) {
-    const { args: [name] } = context;
+    const { guildID, args: [name] } = context;
+    if (await this.client.modules.tagManagement.getTagKeyFromName(guildID, name)) {
+      return new Command.InteractionEmbedResponse()
+        .setDescription(`A command with this name already exists.\nUse \`/tag edit ${name}\` to update it.`)
+        .setEmoji('xmark')
+        .setColor('red');
+    }
+
     await this.createCommand(context);
+
     return new Command.InteractionEmbedResponse()
       .setDescription(`Command \`/${name}\` added.`)
+      .setEmoji('check')
       .setColor('green');
   }
 
   async createCommand({ guildID, args: [name, description, content] }) {
-    if (name.length > 32) {
-      throw new Command.UserError('Name cannot be greater than 32 characters.');
-    }
+    ({ content } = this.client.modules.tagManagement.validateInput(name, description, content));
 
-    if (description.length > 100) {
-      throw new Command.UserError('Description cannot be greater than 100 characters.');
-    }
-
-    if (content.length > 1024) {
-      throw new Command.UserError('Content cannot be greater than 1024 characters.');
-    }
-
-    const command = await this.api.applications(APPLICATION_ID).guilds(guildID).commands()
-      .post({ name, description });
-
-    await GUILD_TAGS.put(`${guildID}:${command.id}`, content, { metadata: { name } });
+    const command = await this.client.modules.tagManagement.createGuildCommand(guildID, name, description);
+    await this.client.modules.tagManagement.createTagKV(guildID, command.id, name, content);
   }
 }
 
