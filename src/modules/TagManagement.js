@@ -85,19 +85,19 @@ class TagManagement {
    * @param content
    * @returns {{name, description, content}}
    */
-  validateInput(name, description, content) {
+  validateInput({ name, description, content } = {}) {
     //  command name length
-    if (name.length > 32) {
+    if (name && name.length > 32) {
       throw new UserError('Name cannot be greater than 32 characters.');
     }
 
     //  command description length
-    if (description.length > 100) {
+    if (description && description.length > 100) {
       throw new UserError('Description cannot be greater than 100 characters.');
     }
 
     //  replace all escaped new lines with an actual new line
-    content = content.replace('\\\\n', '\\n', 'g');
+    content = content.replace(/\\n/gm, '\n');
 
     return { name, description, content };
   }

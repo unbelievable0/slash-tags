@@ -21,7 +21,7 @@ class Command extends BaseCommand {
 
   async run(context) {
     await this.deleteCommand(context);
-    return Command.InteractionEmbedResponse()
+    return new Command.InteractionEmbedResponse()
       .setDescription('Tag deleted successfully!')
       .setEmoji('check')
       .setColor('green');
@@ -34,8 +34,8 @@ class Command extends BaseCommand {
     }
 
     const commandID = key.split(':')[1];
-    await this.client.modules.tagManagement.deleteGuildCommand(guildID, commandID);
     await this.client.modules.tagManagement.deleteTagKV(key);
+    await this.client.modules.tagManagement.deleteGuildCommand(guildID, commandID);
   }
 }
 

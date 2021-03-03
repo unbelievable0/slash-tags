@@ -49,7 +49,7 @@ class Command extends BaseCommand {
   }
 
   async createCommand({ guildID, args: [name, description, content] }) {
-    ({ content } = this.client.modules.tagManagement.validateInput(name, description, content));
+    ({ content } = this.client.modules.tagManagement.validateInput({ name, description, content }));
 
     const command = await this.client.modules.tagManagement.createGuildCommand(guildID, name, description);
     await this.client.modules.tagManagement.createTagKV(guildID, command.id, name, content);

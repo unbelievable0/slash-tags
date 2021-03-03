@@ -43,8 +43,8 @@ class Command extends BaseCommand {
       .setColor('green');
   }
 
-  async updateCommand({ guildID, args: [name, description, content] }, commandID) {
-    ({ content } = this.client.modules.tagManagement.validateInput(name, description, content));
+  async updateCommand({ guildID, args: [name, content] }, commandID) {
+    ({ content } = this.client.modules.tagManagement.validateInput({ name, content }));
 
     await this.client.modules.tagManagement.createTagKV(guildID, commandID, name, content);
   }
