@@ -7,7 +7,7 @@ class Command extends BaseCommand {
       name: 'delete',
       description: 'Delete an existing tag',
       type: ApplicationCommandOptionType.SubCommand,
-      permissions: ['manageGuild'],
+      permissions: ['manageMessages'],
       options: [
         {
           name: 'name',

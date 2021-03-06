@@ -7,7 +7,7 @@ class Command extends BaseCommand {
       name: 'create',
       description: 'Create a new tag',
       type: ApplicationCommandOptionType.SubCommand,
-      permissions: ['manageGuild'],
+      permissions: ['manageMessages'],
       options: [
         {
           name: 'name',

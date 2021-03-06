@@ -7,7 +7,7 @@ class Command extends BaseCommand {
       name: 'edit',
       description: 'Edit an existing tag',
       type: ApplicationCommandOptionType.SubCommand,
-      permissions: ['manageGuild'],
+      permissions: ['manageMessages'],
       options: [
         {
           name: 'name',

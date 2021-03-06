@@ -7,7 +7,7 @@ class Command extends BaseCommand {
       name: 'raw',
       description: 'Show the raw content of a tag',
       type: ApplicationCommandOptionType.SubCommand,
-      permissions: ['manageGuild'],
+      permissions: ['manageMessages'],
       options: [
         {
           name: 'name',
