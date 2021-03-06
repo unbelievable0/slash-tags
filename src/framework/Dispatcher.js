@@ -28,6 +28,13 @@ class Dispatcher {
   }
 
   async onApplicationCommandReceived(interaction) {
+    //  Ignore commands in DMs
+    if (!interaction.guildID) {
+      return new InteractionResponse()
+        .setContent('Commands can only be used in a server.')
+        .setEmoji('xmark');
+    }
+
     const applicationCommand = new ApplicationCommand(interaction.data);
     const context = {
       ...interaction,
