@@ -106,9 +106,26 @@ class TagManagement {
     }
 
     //  replace all escaped new lines with an actual new line
-    content = content.replace(/\\n/gm, '\n');
+    content = this.parseContent(content);
 
     return { name, description, content };
+  }
+
+  /**
+   * Convert escaped new lines to actual ones
+   * @param content
+   * @returns {string|*}
+   */
+  parseContent(content) {
+    try {
+      const parsed = JSON.parse(content);
+      if (typeof parsed === 'object') {
+        return content;
+      }
+    } catch (e) {
+    }
+
+    return content.replace(/\\n/gm, '\n');
   }
 }
 
