@@ -3,5 +3,4 @@ module.exports = [
   {
     tag: ['index', 'create', 'edit', 'delete', 'raw'],
   },
-  'say',
 ];
