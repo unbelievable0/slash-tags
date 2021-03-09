@@ -43,6 +43,15 @@ class TagManagement {
   }
 
   /**
+   * Get a value from the KV
+   * @param key
+   * @returns {*}
+   */
+  getTagKV(key) {
+    return GUILD_TAGS.get(key);
+  }
+
+  /**
    * Create the slash command in Discord
    * @param guildID
    * @param commandName

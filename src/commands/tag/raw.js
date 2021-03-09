@@ -19,8 +19,12 @@ class Command extends BaseCommand {
     });
   }
 
-  async _run({ args: [content] }) {
+  async run({ guildID, args: [name] }) {
+    const key = await this.client.modules.tagManagement.getTagKeyFromName(guildID, name);
+    const content = await this.client.modules.tagManagement.getTagKV(key);
 
+    return new Command.InteractionResponse()
+      .setContent(`\`\`\`\n${content}\`\`\``);
   }
 }
 

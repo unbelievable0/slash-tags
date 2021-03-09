@@ -63,7 +63,8 @@ class Dispatcher {
     }
 
     //  Check for a custom tag
-    const tag = await GUILD_TAGS.get(`${interaction.guildID}:${applicationCommand.id}`);
+    const key = `${interaction.guildID}:${applicationCommand.id}`;
+    const tag = await this.client.modules.tagManagement.getTagKV(key);
     if (tag) {
       return new InteractionResponse(new Parser(context, tag).result());
     }
