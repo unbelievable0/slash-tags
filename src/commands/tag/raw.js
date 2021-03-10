@@ -5,7 +5,7 @@ class Command extends BaseCommand {
   constructor(...args) {
     super(...args, {
       name: 'raw',
-      description: 'Show the raw content of a tag',
+      description: '🔒 Show the raw content of a tag',
       type: ApplicationCommandOptionType.SubCommand,
       permissions: ['manageMessages'],
       options: [

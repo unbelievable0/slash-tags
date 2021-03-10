@@ -4,7 +4,7 @@ class Command extends BaseCommand {
   constructor(...args) {
     super(...args, {
       name: 'tag',
-      description: 'Manage available tags in this server',
+      description: '🔒 Manage available tags in this server',
       options: [],
     });
   }

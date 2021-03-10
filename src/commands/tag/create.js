@@ -5,7 +5,7 @@ class Command extends BaseCommand {
   constructor(...args) {
     super(...args, {
       name: 'create',
-      description: 'Create a new tag',
+      description: '🔒 Create a new tag',
       type: ApplicationCommandOptionType.SubCommand,
       permissions: ['manageMessages'],
       options: [
