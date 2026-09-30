@@ -5,7 +5,7 @@ class Command extends BaseCommand {
   constructor(...args) {
     super(...args, {
       name: 'import',
-      description: 'Import tags from another server',
+      description: '⚙️ Import tags from another server',
       type: ApplicationCommandOptionType.SubCommand,
       defer: true,
       options: [
@@ -19,8 +19,12 @@ class Command extends BaseCommand {
     });
   }
 
+  get tagManagement() {
+    return this.client.modules.tagManagement;
+  }
+
   async run(context) {
-    const { guildID, args: [sourceGuildID] } = context;
+    const { args: [sourceGuildID] } = context;
     if (!sourceGuildID) {
       return new Command.InteractionEmbedResponse()
         .setDescription('Please provide a valid guild ID.')
@@ -28,7 +32,7 @@ class Command extends BaseCommand {
         .setColor('red');
     }
 
-    const count = await this.importCommands(context, sourceGuildID);
+    const count = await this.importTags(context, sourceGuildID);
 
     return new Command.InteractionEmbedResponse()
       .setDescription(`Successfully imported ${count} tag${count === 1 ? '' : 's'}.`)
@@ -36,44 +40,69 @@ class Command extends BaseCommand {
       .setColor('green');
   }
 
-  async importCommands({ guildID }, sourceGuildID) {
-    const sourceCommands = await this.client.modules.tagManagement.getGuildCommands(sourceGuildID);
-    if (!Array.isArray(sourceCommands) || sourceCommands.length === 0) {
+  async importTags({ guildID }, sourceGuildID) {
+    const sourceCommands = await this.tagManagement.getGuildCommands(sourceGuildID);
+    if (!sourceCommands?.length) {
       return 0;
     }
 
-    let count = 0;
-    for (const cmd of sourceCommands) {
-      const { name, description = 'Tag command' } = cmd;
-      let content = await this.client.modules.tagManagement.getTagKV(`${sourceGuildID}:${cmd.id}`);
-      if (content == null) {
-        const sourceKey = await this.client.modules.tagManagement.getTagKeyFromName(sourceGuildID, name);
-        if (sourceKey) {
-          content = await this.client.modules.tagManagement.getTagKV(sourceKey);
-        }
-      }
+    const importedTags = new Map(
+      await Promise.all(
+        sourceCommands.map(async (cmd) => {
+          const content = await this.fetchTagContent(sourceGuildID, cmd);
+          const description = cmd.description || 'Tag command';
+          const validated = this.tagManagement.validateInput({ name: cmd.name, description, content });
+          return [cmd.name, validated];
+        })
+      )
+    );
 
-      if (content == null) {
-        content = '';
-      }
+    const targetCommands = (await this.tagManagement.getGuildCommands(guildID)) ?? [];
+    const seenNames = new Set();
 
-      ({ content } = this.client.modules.tagManagement.validateInput({ name, description, content }));
+    const commandsToPut = targetCommands.map((targetCmd) => {
+      seenNames.add(targetCmd.name);
+      const imported = importedTags.get(targetCmd.name);
+      return imported
+        ? { ...targetCmd, name: imported.name, description: imported.description }
+        : targetCmd;
+    });
 
-      const existingKey = await this.client.modules.tagManagement.getTagKeyFromName(guildID, name);
-      if (existingKey) {
-        const commandID = existingKey.split(':')[1];
-        await this.client.modules.tagManagement.createTagKV(guildID, commandID, name, content);
-        if (typeof this.client.modules.tagManagement.editGuildCommand === 'function') {
-          await this.client.modules.tagManagement.editGuildCommand(guildID, commandID, name, description).catch(() => {
-          });
-        }
-      } else {
-        await this.client.modules.tagManagement.createTag(guildID, name, description, content);
+    for (const [name, imported] of importedTags) {
+      if (!seenNames.has(name)) {
+        commandsToPut.push({
+          name: imported.name,
+          description: imported.description,
+        });
       }
-      count++;
     }
 
-    return count;
+    const resultCommands = await this.tagManagement.bulkOverwriteGuildCommands(guildID, commandsToPut);
+
+    await Promise.all(
+      (resultCommands ?? [])
+        .filter((cmd) => importedTags.has(cmd.name))
+        .map(async (cmd) => {
+          const imported = importedTags.get(cmd.name);
+          const existingKey = await this.tagManagement.getTagKeyFromName(guildID, cmd.name);
+          if (existingKey && existingKey !== `${guildID}:${cmd.id}`) {
+            await this.tagManagement.deleteTagKV(existingKey);
+          }
+          await this.tagManagement.createTagKV(guildID, cmd.id, cmd.name, imported.content);
+        })
+    );
+
+    return importedTags.size;
+  }
+
+  async fetchTagContent(guildID, cmd) {
+    const directContent = await this.tagManagement.getTagKV(`${guildID}:${cmd.id}`);
+    if (directContent != null) {
+      return directContent;
+    }
+
+    const fallbackKey = await this.tagManagement.getTagKeyFromName(guildID, cmd.name);
+    return (fallbackKey && await this.tagManagement.getTagKV(fallbackKey)) ?? '';
   }
 }
 

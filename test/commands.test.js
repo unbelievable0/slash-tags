@@ -114,10 +114,11 @@ test('Tag commands lifecycle: create, raw, edit, delete', async () => {
   assert.equal(keyAfterDelete, undefined);
 });
 
-test('Tag import command: creates missing tags, updates existing tags, and does not delete tags', async () => {
+test('Tag import command: creates missing tags, updates existing tags, and does not delete tags using bulk overwrite', async () => {
   const mockKV = createMockKV();
-  const createdDiscordCommands = [];
-  const updatedDiscordCommands = [];
+  const putCalls = [];
+  const postCalls = [];
+  const patchCalls = [];
   const deletedDiscordCommands = [];
 
   const discordCommandsStore = new Map();
@@ -160,11 +161,22 @@ test('Tag import command: creates missing tags, updates existing tags, and does 
       const guildID = path.split('/')[3];
       return discordCommandsStore.get(guildID) || [];
     }
+    // PUT /applications/{appId}/guilds/{guildId}/commands
+    if (method === 'put' && path.includes('/commands')) {
+      const guildID = path.split('/')[3];
+      putCalls.push({ guildID, path, data: options.data });
+      const result = (options.data || []).map(cmd => ({
+        id: cmd.id || `cmd_created_${nextCmdId++}`,
+        ...cmd
+      }));
+      discordCommandsStore.set(guildID, result);
+      return result;
+    }
     // POST /applications/{appId}/guilds/{guildId}/commands
     if (method === 'post' && path.includes('/commands')) {
       const guildID = path.split('/')[3];
+      postCalls.push({ guildID, ...options.data });
       const newCmd = { id: `cmd_created_${nextCmdId++}`, ...options.data };
-      createdDiscordCommands.push({ guildID, ...newCmd });
       const current = discordCommandsStore.get(guildID) || [];
       current.push(newCmd);
       discordCommandsStore.set(guildID, current);
@@ -175,7 +187,7 @@ test('Tag import command: creates missing tags, updates existing tags, and does 
       const parts = path.split('/');
       const guildID = parts[3];
       const commandID = parts[5];
-      updatedDiscordCommands.push({ guildID, commandID, ...options.data });
+      patchCalls.push({ guildID, commandID, ...options.data });
       return { id: commandID, ...options.data };
     }
     // DELETE /applications/{appId}/guilds/{guildId}/commands/{commandId}
@@ -199,6 +211,31 @@ test('Tag import command: creates missing tags, updates existing tags, and does 
   const resJson = res.toJSON ? res.toJSON() : res;
   assert.ok(resJson.data.embeds[0].description.includes('imported 2 tags'));
 
+  // Verify bulk overwrite PUT was called once and no individual POST or PATCH was called
+  assert.equal(putCalls.length, 1);
+  assert.equal(putCalls[0].guildID, 'target_guild');
+  assert.equal(putCalls[0].path, 'applications/app_123/guilds/target_guild/commands');
+  assert.equal(postCalls.length, 0, 'Should not use individual POST requests');
+  assert.equal(patchCalls.length, 0, 'Should not use individual PATCH requests');
+
+  // Verify payload sent to PUT
+  const putData = putCalls[0].data;
+  assert.equal(putData.length, 3);
+  assert.deepEqual(putData.find(c => c.name === 'shared_tag'), {
+    id: 'cmd_tgt_shared',
+    name: 'shared_tag',
+    description: 'Updated Shared Description'
+  });
+  assert.deepEqual(putData.find(c => c.name === 'keep_tag'), {
+    id: 'cmd_tgt_keep',
+    name: 'keep_tag',
+    description: 'Tag to keep'
+  });
+  assert.deepEqual(putData.find(c => c.name === 'new_tag'), {
+    name: 'new_tag',
+    description: 'New Tag Description'
+  });
+
   // 1. Check that new_tag was created in target_guild
   const newTagKey = await mockClient.modules.tagManagement.getTagKeyFromName('target_guild', 'new_tag');
   assert.ok(newTagKey, 'new_tag should exist in target_guild');
@@ -207,8 +244,6 @@ test('Tag import command: creates missing tags, updates existing tags, and does 
     args: ['new_tag']
   });
   assert.ok(newTagRaw.toJSON().data.content.includes('New Tag Content From Source'));
-  assert.equal(createdDiscordCommands.length, 1);
-  assert.equal(createdDiscordCommands[0].name, 'new_tag');
 
   // 2. Check that shared_tag was updated in target_guild
   const sharedTagRaw = await rawCmd.run({
@@ -224,6 +259,62 @@ test('Tag import command: creates missing tags, updates existing tags, and does 
   });
   assert.ok(keepTagRaw.toJSON().data.content.includes('Keep Tag Content in Target'));
   assert.equal(deletedDiscordCommands.length, 0, 'No tags should be deleted during import');
+});
+
+test('TagManagement bulkOverwriteGuildCommands performs PUT to guild commands endpoint', async () => {
+  let captured = null;
+  const mockClient = new Client({
+    APPLICATION_ID: 'app_123'
+  });
+  mockClient.rest.request = async (method, path, options) => {
+    captured = { method, path, options };
+    return [{ id: 'cmd_1', name: 'tag1' }];
+  };
+
+  const res = await mockClient.modules.tagManagement.bulkOverwriteGuildCommands('guild_xyz', [
+    { name: 'tag1', description: 'desc1' }
+  ]);
+
+  assert.deepEqual(res, [{ id: 'cmd_1', name: 'tag1' }]);
+  assert.equal(captured.method, 'put');
+  assert.equal(captured.path, 'applications/app_123/guilds/guild_xyz/commands');
+  assert.deepEqual(captured.options.data, [{ name: 'tag1', description: 'desc1' }]);
+});
+
+test('Tag import command: handles empty source guild gracefully and returns 0', async () => {
+  const mockKV = createMockKV();
+  let putCalled = false;
+  const mockClient = new Client({
+    APPLICATION_ID: 'app_123',
+    GUILD_TAGS: mockKV
+  });
+  mockClient.rest.request = async (method) => {
+    if (method === 'get') return [];
+    if (method === 'put') putCalled = true;
+    return [];
+  };
+
+  const importCmd = new ImportCommand(mockClient);
+  const res = await importCmd.run({
+    guildID: 'target_guild',
+    args: ['empty_source_guild']
+  });
+
+  const resJson = res.toJSON ? res.toJSON() : res;
+  assert.ok(resJson.data.embeds[0].description.includes('imported 0 tags'));
+  assert.equal(putCalled, false, 'PUT should not be called if source has no commands');
+});
+
+test('Tag import command: validates guild_id argument', async () => {
+  const mockClient = new Client();
+  const importCmd = new ImportCommand(mockClient);
+  const res = await importCmd.run({
+    guildID: 'target_guild',
+    args: []
+  });
+
+  const resJson = res.toJSON ? res.toJSON() : res;
+  assert.ok(resJson.data.embeds[0].description.includes('valid guild ID'));
 });
 
 test('TagManagement createTag creates Discord command and KV entry', async () => {

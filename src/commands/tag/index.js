@@ -5,7 +5,7 @@ class Command extends BaseCommand {
   constructor(...args) {
     super(...args, {
       name: 'tag',
-      description: 'Manage available tags in this server',
+      description: '⚙️ Manage available tags in this server',
       default_member_permissions: Permissions.manageMessages.toString(),
       defer: true,
       options: [],

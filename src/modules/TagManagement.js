@@ -166,6 +166,27 @@ class TagManagement {
   }
 
   /**
+   * Bulk overwrite guild application commands in Discord
+   * @param guildID
+   * @param commands
+   * @returns {Promise<any>}
+   */
+  bulkOverwriteGuildCommands(guildID, commands) {
+    return this.api
+      .applications(this.applicationId)
+      .guilds(guildID)
+      .commands()
+      .put(commands)
+      .catch(err => {
+        if (err.name === 'DiscordAPIError') {
+          throw new UserError(err.message);
+        } else {
+          throw err;
+        }
+      });
+  }
+
+  /**
    * Validate and parse the command name, description and content
    * @param name
    * @param description

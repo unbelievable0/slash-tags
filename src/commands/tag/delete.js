@@ -5,7 +5,7 @@ class Command extends BaseCommand {
   constructor(...args) {
     super(...args, {
       name: 'delete',
-      description: 'Delete an existing tag',
+      description: '⚙️ Delete an existing tag',
       type: ApplicationCommandOptionType.SubCommand,
       defer: true,
       options: [

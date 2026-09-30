@@ -5,7 +5,7 @@ class Command extends BaseCommand {
   constructor(...args) {
     super(...args, {
       name: 'edit',
-      description: 'Edit an existing tag',
+      description: '⚙️ Edit an existing tag',
       type: ApplicationCommandOptionType.SubCommand,
       defer: true,
       options: [
