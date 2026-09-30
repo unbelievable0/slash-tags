@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import DiscordAPIError from '../src/rest/DiscordAPIError.js';
 import HTTPError from '../src/rest/HTTPError.js';
 import RequestHandler from '../src/rest/RequestHandler.js';
+import APIRequest from '../src/rest/APIRequest.js';
 import routeBuilder from '../src/rest/routeBuilder.js';
 
 test('DiscordAPIError flattens nested errors and formats message', () => {
@@ -47,7 +48,7 @@ test('routeBuilder constructs nested endpoint URLs and invokes request', async (
   assert.deepEqual(captured, {
     method: 'delete',
     path: 'applications/app_id/guilds/guild_id/commands/cmd_id',
-    options: { data: {}, query: {} }
+    options: { data: undefined, query: undefined }
   });
 });
 
@@ -58,4 +59,55 @@ test('RequestHandler builds correct URL with versioning', () => {
   });
 
   assert.equal(handler.baseURL, 'https://discord.com/api/v10');
+});
+
+test('APIRequest does not set body or content-type for GET or HEAD requests', () => {
+  const handler = new RequestHandler({ env: { BOT_TOKEN: 'test_token' } });
+  
+  const getReq = new APIRequest(handler, 'get', 'applications/123/guilds/456/commands', { data: { dummy: 'data' } });
+  assert.equal(getReq.body, undefined);
+  assert.equal(getReq.headers['Content-Type'], undefined);
+  assert.equal(getReq.headers.Authorization, 'Bot test_token');
+
+  const headReq = new APIRequest(handler, 'head', 'applications/123', {});
+  assert.equal(headReq.body, undefined);
+  assert.equal(headReq.headers['Content-Type'], undefined);
+});
+
+test('APIRequest sets body and content-type for POST/PATCH/PUT requests when data is present', () => {
+  const handler = new RequestHandler({ env: { BOT_TOKEN: 'test_token' } });
+  
+  const postReq = new APIRequest(handler, 'post', 'applications/123/guilds/456/commands', { data: { name: 'tag_name' } });
+  assert.equal(postReq.body, JSON.stringify({ name: 'tag_name' }));
+  assert.equal(postReq.headers['Content-Type'], 'application/json');
+});
+
+test('APIRequest send performs fetch successfully without GET body error', async (t) => {
+  const originalFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  let fetchedUrl = null;
+  let fetchedOptions = null;
+
+  globalThis.fetch = async (url, options) => {
+    // Mimic real fetch behavior: verify that GET request does not have a body property passed as body content
+    if ((options.method === 'GET' || options.method === 'HEAD') && options.body !== undefined) {
+      throw new TypeError('Request with a GET or HEAD method cannot have a body.');
+    }
+    fetchedUrl = url;
+    fetchedOptions = options;
+    return new Response(JSON.stringify([{ id: '1', name: 'cmd' }]), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  };
+
+  const handler = new RequestHandler({ env: { BOT_TOKEN: 'test_token' } });
+  const result = await handler.api.applications('app_id').guilds('guild_id').commands().get();
+
+  assert.deepEqual(result, [{ id: '1', name: 'cmd' }]);
+  assert.equal(fetchedOptions.method, 'GET');
+  assert.equal(fetchedOptions.body, undefined);
 });

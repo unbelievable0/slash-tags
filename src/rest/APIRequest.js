@@ -11,7 +11,9 @@ class APIRequest {
     let url = new URL(`${this.requestHandler.baseURL}/${this.path}`);
     if (this.options.query) {
       Object.keys(this.options.query).forEach(key => {
-        url.searchParams.append(key, this.options.query[key]);
+        if (this.options.query[key] !== undefined) {
+          url.searchParams.append(key, this.options.query[key]);
+        }
       });
     }
     return url;
@@ -25,7 +27,7 @@ class APIRequest {
     let headers = {};
 
     if (this.options.auth !== false && this.botToken) headers.Authorization = `Bot ${this.botToken}`;
-    if (this.options.data) headers['Content-Type'] = 'application/json';
+    if (this.body) headers['Content-Type'] = 'application/json';
     if (this.options.reason) headers['X-Audit-Log-Reason'] = encodeURIComponent(this.options.reason);
     if (this.options.headers) headers = { ...headers, ...this.options.headers };
 
@@ -33,7 +35,10 @@ class APIRequest {
   }
 
   get body() {
-    if (this.options.data) {
+    if (['get', 'head'].includes(this.method?.toLowerCase())) {
+      return undefined;
+    }
+    if (this.options.data !== undefined && this.options.data !== null) {
       return JSON.stringify(this.options.data);
     }
   }
