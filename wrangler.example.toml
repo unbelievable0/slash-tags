@@ -1,12 +1,21 @@
 name = "slash-tags"
-type = "webpack"
-account_id = ""
-workers_dev = true
+main = "index.js"
+compatibility_date = "2025-06-17"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+APPLICATION_ID = ""
+BOT_TOKEN = ""
+PUBLIC_KEY = ""
 
 [env.development]
-vars= { APPLICATION_ID = "" }
-kv_namespaces = [{ binding = "GUILD_TAGS", preview_id = "" }]
+vars = { APPLICATION_ID = "", BOT_TOKEN = "", PUBLIC_KEY = "" }
+kv_namespaces = [
+  { binding = "GUILD_TAGS", id = "preview", preview_id = "" }
+]
 
 [env.production]
-vars= { APPLICATION_ID = "" }
-kv_namespaces = [{ binding = "GUILD_TAGS", id = "" }]
+vars = { APPLICATION_ID = "", BOT_TOKEN = "", PUBLIC_KEY = "" }
+kv_namespaces = [
+  { binding = "GUILD_TAGS", id = "" }
+]

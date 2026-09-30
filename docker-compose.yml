@@ -1,0 +1,16 @@
+services:
+  wrangler:
+    build: .
+    platform: linux/arm64
+    container_name: wrangler_worker
+    ports:
+      - "8787:8787"
+    working_dir: /app
+    command: npm run dev
+    volumes:
+      - .:/app
+      - /app/node_modules  # prevents host from overwriting container's native modules
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: "tunnel --no-autoupdate run --token ${CLOUDFLARED_TOKEN}"

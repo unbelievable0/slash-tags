@@ -1,5 +1,5 @@
-const Permission = require('./Permission');
-const User = require('./User');
+import Permission from './Permission.js';
+import User from './User.js';
 
 class Member {
   constructor(data) {
@@ -12,4 +12,4 @@ class Member {
   }
 }
 
-module.exports = Member;
+export default Member;

@@ -1,13 +1,13 @@
-const BaseCommand = require('../../framework/Command');
-const { ApplicationCommandOptionType } = require('../../constants/Types');
+import BaseCommand from '../../framework/Command.js';
+import { ApplicationCommandOptionType } from '../../constants/Types.js';
 
 class Command extends BaseCommand {
   constructor(...args) {
     super(...args, {
       name: 'create',
-      description: '🔒 Create a new tag',
+      description: 'Create a new tag',
       type: ApplicationCommandOptionType.SubCommand,
-      permissions: ['manageMessages'],
+      defer: true,
       options: [
         {
           name: 'name',
@@ -49,11 +49,8 @@ class Command extends BaseCommand {
   }
 
   async createCommand({ guildID, args: [name, description, content] }) {
-    ({ content } = this.client.modules.tagManagement.validateInput({ name, description, content }));
-
-    const command = await this.client.modules.tagManagement.createGuildCommand(guildID, name, description);
-    await this.client.modules.tagManagement.createTagKV(guildID, command.id, name, content);
+    await this.client.modules.tagManagement.createTag(guildID, name, description, content);
   }
 }
 
-module.exports = Command;
+export default Command;

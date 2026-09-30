@@ -1,11 +1,20 @@
+import InteractionResponse from '../structures/InteractionResponse.js';
+import InteractionEmbedResponse from '../structures/InteractionEmbedResponse.js';
+import UserError from './UserError.js';
+
 class Command {
+  static InteractionResponse = InteractionResponse;
+  static InteractionEmbedResponse = InteractionEmbedResponse;
+  static UserError = UserError;
+
   constructor(client, options = {}) {
     this.client = client;
     this.name = options.name;
     this.type = options.type;
     this.description = options.description;
     this.options = options.options;
-    this.permissions = options.permissions || [];
+    this.default_member_permissions = options.default_member_permissions;
+    this.defer = Boolean(options.defer);
   }
 
   get api() {
@@ -13,28 +22,17 @@ class Command {
   }
 
   toJSON() {
-    return {
+    const json = {
       name: this.name,
-      type: this.type,
       description: this.description,
-      options: this.options,
     };
+    if (this.type !== undefined) json.type = this.type;
+    if (this.options !== undefined) json.options = this.options;
+    if (this.default_member_permissions !== undefined) {
+      json.default_member_permissions = this.default_member_permissions;
+    }
+    return json;
   }
 }
 
-module.exports = Command;
-
-/**
- * @type {InteractionResponse}
- */
-module.exports.InteractionResponse = require('../structures/InteractionResponse');
-
-/**
- * @type {InteractionEmbedResponse}
- */
-module.exports.InteractionEmbedResponse = require('../structures/InteractionEmbedResponse');
-
-/**
- * @type {UserError}
- */
-module.exports.UserError = require('./UserError');
+export default Command;

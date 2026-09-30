@@ -1,15 +1,15 @@
-const { InteractionType, InteractionResponseType } = require('../constants/Types');
-const { Interaction, ApplicationCommand, InteractionResponse, InteractionEmbedResponse } = require('../structures');
-const { PermissionFlags } = require('../constants/Permissions');
-const { Parser } = require('../modules');
+import { InteractionResponseType, InteractionType } from '../constants/Types.js';
+import { ApplicationCommand, Interaction, InteractionEmbedResponse, InteractionResponse } from '../structures/index.js';
+import { Parser } from '../modules/index.js';
 
 class Dispatcher {
 
   constructor(client) {
     this.client = client;
+    this.handleError = this.handleError.bind(this);
   }
 
-  async onInteractionReceived(data) {
+  async onInteractionReceived(data, ctx) {
     const interaction = new Interaction(data);
     switch (interaction.type) {
       case InteractionType.Ping:
@@ -18,7 +18,7 @@ class Dispatcher {
         };
 
       case InteractionType.ApplicationCommand:
-        return this.onApplicationCommandReceived(interaction)
+        return this.onApplicationCommandReceived(interaction, ctx)
           .catch(this.handleError);
 
       default:
@@ -27,8 +27,8 @@ class Dispatcher {
     }
   }
 
-  async onApplicationCommandReceived(interaction) {
-    //  Ignore commands in DMs
+  async onApplicationCommandReceived(interaction, ctx) {
+    // Ignore commands in DMs
     if (!interaction.guildID) {
       return new InteractionResponse()
         .setContent('Commands can only be used in a server.')
@@ -41,32 +41,59 @@ class Dispatcher {
       args: applicationCommand.args,
     };
 
-    //  Check for a global command
+    // Check for a global command
     const command = this.client.commandStore.get(applicationCommand.commandName);
     if (command) {
-
-      //  Basic permission check
-      const missingPermissions = context.member.permissions.missing(command.permissions);
-      if (missingPermissions.length) {
-        const permissionString = missingPermissions.map(p => PermissionFlags[p]).join(', ');
-        return new InteractionResponse()
-          .setContent(`You do not have permission to use this command.\nMissing: \`${permissionString}\``)
-          .setEmoji('xmark')
-          .setEphemeral();
+      if (command.defer) {
+        const promise = this.executeCommandDeferred(command, context, interaction);
+        if (ctx && typeof ctx.waitUntil === 'function') {
+          ctx.waitUntil(promise);
+        }
+        return {
+          type: InteractionResponseType.DeferredChannelMessageWithSource,
+        };
       }
 
-      //  Run the command
+      // Run the command
       return (await command.run(context))
         || new InteractionEmbedResponse()
           .setDescription('Missing response')
           .setColor('red');
     }
 
-    //  Check for a custom tag
+    // Check for a custom tag
     const key = `${interaction.guildID}:${applicationCommand.id}`;
     const tag = await this.client.modules.tagManagement.getTagKV(key);
     if (tag) {
       return new InteractionResponse(new Parser(context, tag).result());
+    }
+  }
+
+  async executeCommandDeferred(command, context, interaction) {
+    let response;
+    try {
+      response = (await command.run(context))
+        || new InteractionEmbedResponse()
+          .setDescription('Missing response')
+          .setColor('red');
+    } catch (error) {
+      response = this.handleError(error);
+    }
+
+    try {
+      const applicationId = interaction.applicationID
+        || this.client.applicationId
+        || this.client.env?.APPLICATION_ID
+        || (typeof APPLICATION_ID !== 'undefined' ? APPLICATION_ID : undefined);
+
+      const payload = typeof response?.toJSON === 'function' ? response.toJSON().data : (response?.data || response);
+
+      await this.client.api
+        .webhooks(applicationId)(interaction.token)
+        .messages('@original')
+        .patch(payload);
+    } catch (err) {
+      console.error('Failed to send deferred interaction response:', err);
     }
   }
 
@@ -78,14 +105,12 @@ class Dispatcher {
   handleError(error) {
     if (error.name === 'UserError') {
       return new InteractionResponse()
-        .channelMessage()
         .setContent(error.message)
         .setEmoji('xmark')
         .setEphemeral();
     } else {
       console.error(error.stack);
       return new InteractionResponse()
-        .channelMessage()
         .setContent('An unexpected error occurred executing this command.')
         .setEmoji('xmark')
         .setEphemeral();
@@ -93,4 +118,4 @@ class Dispatcher {
   }
 }
 
-module.exports = Dispatcher;
+export default Dispatcher;

@@ -1,7 +1,7 @@
-//  @formatter:off
-const bitFlag = (value) =>  BigInt(1) << BigInt(value);
+// @formatter:off
+const bitFlag = (value) => BigInt(1) << BigInt(value);
 
-module.exports = {
+export const Permissions = {
   createInstantInvite:     bitFlag(0),
   kickMembers:             bitFlag(1),
   banMembers:              bitFlag(2),
@@ -36,7 +36,7 @@ module.exports = {
   useSlashCommands:        bitFlag(31),
 };
 
-module.exports.PermissionFlags = {
+export const PermissionFlags = {
   createInstantInvite: 'Create instant invite',
   kickMembers: 'Kick members',
   banMembers: 'Ban members',
@@ -69,4 +69,4 @@ module.exports.PermissionFlags = {
   manageWebhooks: 'Manage webhooks',
   manageEmojis: 'Manage emojis',
   useSlashCommands: 'Use slash commands',
-}
+};

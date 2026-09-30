@@ -1,11 +1,12 @@
-const { InteractionResponseType, MessageFlags } = require('../constants/Types');
-const { resolveEmoji } = require('../constants/Emojis');
+import { InteractionResponseType, MessageFlags } from '../constants/Types.js';
+import { resolveEmoji } from '../constants/Emojis.js';
 
 class InteractionResponse {
   constructor(data = {}) {
     this.type = data.type || InteractionResponseType.ChannelMessageWithSource;
     this.flags = data.flags || 0;
     this.content = data.content || null;
+    this.components = data.components;
 
     if (data.embed) {
       this.embeds = [data.embed];
@@ -15,11 +16,11 @@ class InteractionResponse {
   }
 
   /**
-   * Set the type to ChannelMessage
+   * Set the type to ChannelMessageWithSource
    * @returns {InteractionResponse}
    */
   channelMessage() {
-    this.type = InteractionResponseType.ChannelMessage;
+    this.type = InteractionResponseType.ChannelMessageWithSource;
     return this;
   }
 
@@ -39,7 +40,6 @@ class InteractionResponse {
    */
   setEphemeral() {
     this.flags = this.flags | MessageFlags.Ephemeral;
-    this.channelMessage();
     return this;
   }
 
@@ -47,7 +47,7 @@ class InteractionResponse {
    * Set the emoji to place at the beginning of the content
    * This should be called after InteractionResponse.setContent()
    * @param {string} emoji
-   * @returns {InteractionEmbedResponse}
+   * @returns {InteractionResponse}
    */
   setEmoji(emoji) {
     this.content = `${resolveEmoji(emoji)} ${this.content || ''}`;
@@ -63,9 +63,10 @@ class InteractionResponse {
     if (this.flags) result.data.flags = this.flags;
     if (this.content) result.data.content = this.content;
     if (this.embeds) result.data.embeds = this.embeds;
+    if (this.components) result.data.components = this.components;
 
     return result;
   }
 }
 
-module.exports = InteractionResponse;
+export default InteractionResponse;

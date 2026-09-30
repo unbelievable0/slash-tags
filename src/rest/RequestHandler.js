@@ -1,17 +1,23 @@
-const { API_URL, API_VERSION } = require('../constants/Endpoints');
-const APIRequest = require('./APIRequest');
-const HTTPError = require('./HTTPError');
-const DiscordAPIError = require('./DiscordAPIError');
-const routeBuilder = require('./routeBuilder');
+import { API_URL, API_VERSION } from '../constants/Endpoints.js';
+import APIRequest from './APIRequest.js';
+import HTTPError from './HTTPError.js';
+import DiscordAPIError from './DiscordAPIError.js';
+import routeBuilder from './routeBuilder.js';
 
 class RequestHandler {
-  
+
   /**
+   * @param {any} [client]
    * @param {object} [options]
    * @param {string} [options.apiURL]
    * @param {number} [options.apiVersion]
    */
-  constructor(options = {}) {
+  constructor(client, options = {}) {
+    if (client && !client.env && (client.apiURL || client.apiVersion)) {
+      options = client;
+      client = null;
+    }
+    this.client = client;
     const baseURL = options.apiURL || API_URL;
     const version = options.apiVersion || API_VERSION;
     this.baseURL = `${baseURL}/v${version}`;
@@ -49,7 +55,7 @@ class RequestHandler {
   }
 
   parseResponse(res) {
-    if (res.headers.get('content-type').includes('application/json')) {
+    if (res.headers.get('content-type')?.includes('application/json')) {
       return res.json();
     }
     return null;
@@ -57,4 +63,4 @@ class RequestHandler {
 
 }
 
-module.exports = RequestHandler;
+export default RequestHandler;

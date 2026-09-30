@@ -11,10 +11,11 @@ class Parser {
         return parsed;
       }
     } catch (e) {
+      // ignore JSON parse errors
     }
 
     return { content: this.message };
   }
 }
 
-module.exports = Parser;
+export default Parser;

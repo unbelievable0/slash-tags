@@ -23,4 +23,4 @@ function routeBuilder(manager) {
   return new Proxy(noop, handler);
 }
 
-module.exports = routeBuilder;
+export default routeBuilder;

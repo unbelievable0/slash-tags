@@ -1,12 +1,16 @@
-const InteractionResponse = require('./InteractionResponse');
-const User = require('./User');
-const { resolveColor } = require('../constants/Colors');
-const { resolveEmoji } = require('../constants/Emojis');
+import InteractionResponse from './InteractionResponse.js';
+import User from './User.js';
+import { resolveColor } from '../constants/Colors.js';
+import { resolveEmoji } from '../constants/Emojis.js';
 
 class InteractionEmbedResponse extends InteractionResponse {
   constructor(data) {
     super();
     this.embed = data || {};
+  }
+
+  get properties() {
+    return Object.keys(this.embed).filter(key => key !== 'color');
   }
 
   /**
@@ -67,7 +71,7 @@ class InteractionEmbedResponse extends InteractionResponse {
   }
 
   /**
-   * Set the
+   * Set the embed color
    * @param color
    * @returns {InteractionEmbedResponse}
    */
@@ -90,8 +94,10 @@ class InteractionEmbedResponse extends InteractionResponse {
   toJSON() {
     const embed = {};
 
-    //  Add all properties that don't require parsing
-    this.properties.forEach(key => embed[key] = this.embed[key]);
+    // Add all properties except 'color' (which is handled separately)
+    this.properties.forEach(key => {
+      embed[key] = this.embed[key];
+    });
 
     if (this.embed.color) {
       embed.color = resolveColor(this.embed.color);
@@ -101,11 +107,6 @@ class InteractionEmbedResponse extends InteractionResponse {
     result.data.embeds = [embed];
     return result;
   }
-
-  get properties() {
-    return Object.keys(this.embed)
-      .filter(key => !['color'].includes(key));
-  }
 }
 
-module.exports = InteractionEmbedResponse;
+export default InteractionEmbedResponse;

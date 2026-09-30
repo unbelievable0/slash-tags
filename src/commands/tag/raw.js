@@ -1,13 +1,13 @@
-const BaseCommand = require('../../framework/Command');
-const { ApplicationCommandOptionType } = require('../../constants/Types');
+import BaseCommand from '../../framework/Command.js';
+import { ApplicationCommandOptionType } from '../../constants/Types.js';
 
 class Command extends BaseCommand {
   constructor(...args) {
     super(...args, {
       name: 'raw',
-      description: '🔒 Show the raw content of a tag',
+      description: 'Show the raw content of a tag',
       type: ApplicationCommandOptionType.SubCommand,
-      permissions: ['manageMessages'],
+      defer: true,
       options: [
         {
           name: 'name',
@@ -28,4 +28,4 @@ class Command extends BaseCommand {
   }
 }
 
-module.exports = Command;
+export default Command;

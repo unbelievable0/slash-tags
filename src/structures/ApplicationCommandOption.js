@@ -1,4 +1,4 @@
-class ApplicationCommandOption {
+export default class ApplicationCommandOption {
   constructor(data) {
     this.name = data.name;
     this.type = data.type;
@@ -7,5 +7,3 @@ class ApplicationCommandOption {
     if (data.choices) this.choices = data.choices;
   }
 }
-
-module.exports = ApplicationCommandOption;

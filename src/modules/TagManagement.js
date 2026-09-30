@@ -1,10 +1,21 @@
-const UserError = require('../framework/UserError');
+import UserError from '../framework/UserError.js';
 
 class TagManagement {
 
   constructor(client) {
     this.client = client;
-    this.api = client.api;
+  }
+
+  get api() {
+    return this.client.api;
+  }
+
+  get kv() {
+    return this.client.env?.GUILD_TAGS || (typeof GUILD_TAGS !== 'undefined' ? GUILD_TAGS : undefined);
+  }
+
+  get applicationId() {
+    return this.client.env?.APPLICATION_ID || (typeof APPLICATION_ID !== 'undefined' ? APPLICATION_ID : undefined);
   }
 
   /**
@@ -14,8 +25,10 @@ class TagManagement {
    * @returns {Promise<*>}
    */
   async getTagKeyFromName(guildID, name) {
-    const { keys } = await GUILD_TAGS.list({ prefix: `${guildID}:` });
-    const key = keys.find(key => key.metadata.name === name);
+    const kv = this.kv;
+    if (!kv) return null;
+    const { keys } = await kv.list({ prefix: `${guildID}:` });
+    const key = keys.find(key => key.metadata?.name === name);
     if (key) {
       return key.name;
     }
@@ -30,7 +43,8 @@ class TagManagement {
    * @returns {*}
    */
   createTagKV(guildID, commandID, commandName, content) {
-    return GUILD_TAGS.put(`${guildID}:${commandID}`, content, { metadata: { name: commandName } });
+    if (!this.kv) return null;
+    return this.kv.put(`${guildID}:${commandID}`, content, { metadata: { name: commandName } });
   }
 
   /**
@@ -39,7 +53,8 @@ class TagManagement {
    * @returns {*}
    */
   deleteTagKV(key) {
-    return GUILD_TAGS.delete(key);
+    if (!this.kv) return null;
+    return this.kv.delete(key);
   }
 
   /**
@@ -48,7 +63,28 @@ class TagManagement {
    * @returns {*}
    */
   getTagKV(key) {
-    return GUILD_TAGS.get(key);
+    if (!this.kv || !key) return null;
+    return this.kv.get(key);
+  }
+
+  /**
+   * Get all slash commands in Discord for a guild
+   * @param guildID
+   * @returns {Promise<any>}
+   */
+  getGuildCommands(guildID) {
+    return this.api
+      .applications(this.applicationId)
+      .guilds(guildID)
+      .commands()
+      .get()
+      .catch(err => {
+        if (err.name === 'DiscordAPIError') {
+          throw new UserError(err.message);
+        } else {
+          throw err;
+        }
+      });
   }
 
   /**
@@ -59,8 +95,50 @@ class TagManagement {
    * @returns {Promise<any>}
    */
   createGuildCommand(guildID, commandName, commandDescription) {
-    return this.api.applications(APPLICATION_ID).guilds(guildID).commands()
+    return this.api.applications(this.applicationId).guilds(guildID).commands()
       .post({
+        name: commandName,
+        description: commandDescription,
+      })
+      .catch(err => {
+        if (err.name === 'DiscordAPIError') {
+          throw new UserError(err.message);
+        } else {
+          throw err;
+        }
+      });
+  }
+
+  /**
+   * Create a slash command and KV entry for a tag
+   * @param guildID
+   * @param name
+   * @param description
+   * @param content
+   * @returns {Promise<any>}
+   */
+  async createTag(guildID, name, description, content) {
+    ({ content } = this.validateInput({ name, description, content }));
+
+    const command = await this.createGuildCommand(guildID, name, description);
+    await this.createTagKV(guildID, command.id, name, content);
+    return command;
+  }
+
+  /**
+   * Edit a slash command in Discord
+   * @param guildID
+   * @param commandID
+   * @param commandName
+   * @param commandDescription
+   * @returns {Promise<any>}
+   */
+  editGuildCommand(guildID, commandID, commandName, commandDescription) {
+    return this.api
+      .applications(this.applicationId)
+      .guilds(guildID)
+      .commands(commandID)
+      .patch({
         name: commandName,
         description: commandDescription,
       })
@@ -81,7 +159,7 @@ class TagManagement {
    */
   deleteGuildCommand(guildID, commandID) {
     return this.api
-      .applications(APPLICATION_ID)
+      .applications(this.applicationId)
       .guilds(guildID)
       .commands(commandID)
       .delete();
@@ -123,10 +201,11 @@ class TagManagement {
         return content;
       }
     } catch (e) {
+      // ignore
     }
 
     return content.replace(/\\n/gm, '\n');
   }
 }
 
-module.exports = TagManagement;
+export default TagManagement;

@@ -1,25 +1,40 @@
-const APIRouter = require('./router/APIRouter');
-const APIResponse = require('./router/APIResponse');
+import APIRouter from './router/APIRouter.js';
+import APIResponse from './router/APIResponse.js';
 
 const router = new APIRouter();
 
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request));
-});
+export default {
+  async fetch(request, env = {}, ctx) {
+    if (typeof log === 'function') {
+      log('Request received:', request.method, request.url);
+    }
+    const res = new APIResponse();
+    let response;
+    try {
+      response = await router.route(request, res, env, ctx);
+    } catch (error) {
+      response = await handleError(error, request, res);
+    }
 
-/**
- * Handle all incoming requests
- * @param req
- * @returns {Promise<Response>}
- */
-async function handleRequest(req) {
-  const res = new APIResponse();
-  try {
-    return await router.route(req, res);
-  } catch (error) {
-    return handleError(error, req, res);
-  }
-}
+    if (typeof log === 'function' && response) {
+      try {
+        const cloned = response.clone();
+        const contentType = cloned.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const body = await cloned.json();
+          log('Response body:', body);
+        } else {
+          const body = await cloned.text();
+          log('Response body:', body);
+        }
+      } catch {
+        // Ignore errors during logging of response body
+      }
+    }
+
+    return response;
+  },
+};
 
 /**
  * Handle some errors before sending 500 Internal Server Error

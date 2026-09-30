@@ -1,4 +1,4 @@
-const { avatarURL, defaultAvatarURL } = require('../constants/Endpoints');
+import { avatarURL, defaultAvatarURL } from '../constants/Endpoints.js';
 
 class User {
   constructor(data) {
@@ -6,6 +6,12 @@ class User {
     this.avatar = data.avatar;
     this.discriminator = data.discriminator;
     this.username = data.username;
+  }
+
+  get tag() {
+    return this.discriminator && this.discriminator !== '0'
+      ? `${this.username}#${this.discriminator}`
+      : this.username;
   }
 
   get avatarURL() {
@@ -17,4 +23,4 @@ class User {
   }
 }
 
-module.exports = User;
+export default User;

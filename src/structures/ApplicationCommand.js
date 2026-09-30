@@ -1,7 +1,7 @@
-const { ApplicationCommandOptionType } = require('../constants/Types');
-const ApplicationCommandOption = require('./ApplicationCommandOption');
+import { ApplicationCommandOptionType } from '../constants/Types.js';
+import ApplicationCommandOption from './ApplicationCommandOption.js';
 
-class ApplicationCommand {
+export default class ApplicationCommand {
   constructor(data) {
     this.id = data.id;
     this.name = data.name;
@@ -15,13 +15,13 @@ class ApplicationCommand {
   get args() {
     let args = [];
     let options = this.options;
-    while (options) {
+    while (Array.isArray(options) && options.length > 0) {
       for (let option of options) {
-        if (option.hasOwnProperty('value')) {
+        if (option && Object.prototype.hasOwnProperty.call(option, 'value')) {
           args.push(option.value);
         }
       }
-      options = options[0].options;
+      options = options[0]?.options;
     }
 
     return args;
@@ -35,21 +35,20 @@ class ApplicationCommand {
     let name = this.name;
 
     let options = this.options;
-    while (options) {
-      const isSubCommand = [
+    while (Array.isArray(options) && options.length > 0) {
+      const first = options[0];
+      const isSubCommand = first && [
         ApplicationCommandOptionType.SubCommand,
         ApplicationCommandOptionType.SubCommandGroup,
-      ].includes(options[0].type);
+      ].includes(first.type);
 
       if (isSubCommand) {
-        name = `${name}/${options[0].name}`;
+        name = `${name}/${first.name}`;
       }
 
-      options = options[0].options;
+      options = first?.options;
     }
 
     return name;
   }
 }
-
-module.exports = ApplicationCommand;

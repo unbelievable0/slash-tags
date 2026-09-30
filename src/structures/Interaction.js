@@ -1,8 +1,9 @@
-const Member = require('./Member');
+import Member from './Member.js';
 
 class Interaction {
   constructor(data) {
     this.id = data.id;
+    this.applicationID = data.application_id;
     this.type = data.type;
     this.data = data.data;
     this.guildID = data.guild_id;
@@ -13,4 +14,4 @@ class Interaction {
   }
 }
 
-module.exports = Interaction;
+export default Interaction;

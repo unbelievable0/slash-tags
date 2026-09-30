@@ -17,10 +17,14 @@ class APIRequest {
     return url;
   }
 
+  get botToken() {
+    return this.requestHandler?.client?.env?.BOT_TOKEN || (typeof BOT_TOKEN !== 'undefined' ? BOT_TOKEN : '');
+  }
+
   get headers() {
     let headers = {};
 
-    if (this.options.auth !== false) headers.Authorization = `Bot ${BOT_TOKEN}`;
+    if (this.options.auth !== false && this.botToken) headers.Authorization = `Bot ${this.botToken}`;
     if (this.options.data) headers['Content-Type'] = 'application/json';
     if (this.options.reason) headers['X-Audit-Log-Reason'] = encodeURIComponent(this.options.reason);
     if (this.options.headers) headers = { ...headers, ...this.options.headers };
@@ -36,11 +40,11 @@ class APIRequest {
 
   async send() {
     return fetch(this.url.toString(), {
-      method: this.method,
+      method: this.method ? this.method.toUpperCase() : 'GET',
       headers: this.headers,
       body: this.body,
     });
   }
 }
 
-module.exports = APIRequest;
+export default APIRequest;

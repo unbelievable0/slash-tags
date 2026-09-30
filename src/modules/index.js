@@ -1,4 +1,7 @@
-module.exports = {
-  Parser: require('./Parser'),
-  TagManagement: require('./TagManagement'),
+import Parser from './Parser.js';
+import TagManagement from './TagManagement.js';
+
+export {
+  Parser,
+  TagManagement,
 };

@@ -1,12 +1,13 @@
-const Dispatcher = require('../framework/Dispatcher');
-const RequestHandler = require('../rest/RequestHandler');
-const CommandStore = require('./CommandStore');
-const TagManagement = require('../modules/TagManagement');
+import Dispatcher from '../framework/Dispatcher.js';
+import RequestHandler from '../rest/RequestHandler.js';
+import CommandStore from './CommandStore.js';
+import TagManagement from '../modules/TagManagement.js';
 
 class Client {
-  constructor() {
+  constructor(env = {}) {
+    this.env = env;
     this.dispatcher = new Dispatcher(this);
-    this.rest = new RequestHandler();
+    this.rest = new RequestHandler(this);
     this.commandStore = new CommandStore(this);
 
     this.modules = {
@@ -18,6 +19,9 @@ class Client {
     return this.rest.api;
   }
 
+  get applicationId() {
+    return this.env?.APPLICATION_ID || (typeof APPLICATION_ID !== 'undefined' ? APPLICATION_ID : undefined);
+  }
 }
 
-module.exports = Client;
+export default Client;

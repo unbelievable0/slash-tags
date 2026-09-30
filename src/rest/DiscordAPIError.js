@@ -5,8 +5,9 @@
  * @extends Error
  */
 class DiscordAPIError extends Error {
-  constructor(path, error, method, status) {
+  constructor(path, error = {}, method, status) {
     super();
+    error = error || {};
     const flattened = this.constructor.flattenErrors(error.errors || error).join('\n');
     this.name = 'DiscordAPIError';
     this.message = error.message && flattened ? `${error.message}\n${flattened}` : error.message || flattened;
@@ -44,6 +45,9 @@ class DiscordAPIError extends Error {
    * @private
    */
   static flattenErrors(obj, key = '') {
+    if (!obj || typeof obj !== 'object') {
+      return [];
+    }
     let messages = [];
 
     for (const [k, v] of Object.entries(obj)) {
@@ -65,4 +69,4 @@ class DiscordAPIError extends Error {
   }
 }
 
-module.exports = DiscordAPIError;
+export default DiscordAPIError;

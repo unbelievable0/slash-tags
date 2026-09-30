@@ -1,17 +1,22 @@
 {
   "name": "slash-tags",
   "version": "1.0.0",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "wrangler dev --env development",
-    "publish": "wrangler publish --env production"
+    "dev": "wrangler dev --env development --ip 0.0.0.0 --port 8787",
+    "deploy": "wrangler deploy --env production",
+    "publish": "wrangler deploy --env production",
+    "types": "wrangler types",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/**/*.test.js"
   },
   "author": "unb <unbelievable.tbh@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@cloudflare/workers-types": "^2.1.0"
-  },
-  "dependencies": {
-    "tweetnacl": "^1.0.3"
+    "@cloudflare/workers-types": "^5.20260930.2",
+    "@types/node": "^26.6.3",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.145.0"
   }
 }

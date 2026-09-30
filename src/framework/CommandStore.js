@@ -1,4 +1,4 @@
-const GlobalCommands = require('../constants/GlobalCommands');
+import GlobalCommands from '../constants/GlobalCommands.js';
 
 class CommandStore extends Map {
   constructor(client) {
@@ -9,6 +9,10 @@ class CommandStore extends Map {
 
   get api() {
     return this.client.rest.api;
+  }
+
+  get applicationId() {
+    return this.client.env?.APPLICATION_ID || (typeof APPLICATION_ID !== 'undefined' ? APPLICATION_ID : undefined);
   }
 
   registerGlobalCommands(commands, route) {
@@ -26,14 +30,17 @@ class CommandStore extends Map {
     });
   }
 
-  registerGlobalCommand(route) {
-    const Command = require(`../commands/${route}`);
-    route = route.replace(/\/index$/, '');
-    this.set(route, new Command(this.client));
+  async registerGlobalCommand(route) {
+    const filePath = route;
+    const storeKey = route.replace(/\/index$/, '');
+    // Dynamic import returns a Promise with the module namespace
+    const module = await import(`../commands/${filePath}.js`);
+    const Command = module.default;
+    this.set(storeKey, new Command(this.client));
   }
 
   commandList() {
-    //  Bit of a hacky way to construct the command list
+    // Bit of a hacky way to construct the command list
     const result = [];
     for (let key of [...this.keys()]) {
       const route = key.split('/');
@@ -42,7 +49,8 @@ class CommandStore extends Map {
       if (route.length === 1) {
         result.push(command);
       } else if (route.length === 2) {
-        result.find(c => c.name === route[0]).options.push(command);
+        const parent = result.find(c => c.name === route[0]);
+        if (parent) parent.options.push(command);
       }
     }
 
@@ -55,10 +63,10 @@ class CommandStore extends Map {
    */
   async updateGlobalCommandList() {
     return this.api
-      .applications(APPLICATION_ID)
+      .applications(this.applicationId)
       .commands()
       .put(this.commandList());
   }
 }
 
-module.exports = CommandStore;
+export default CommandStore;
